@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { put, head } from '@vercel/blob'
+import { put, get } from '@vercel/blob'
 
 const BLOB_KEY = 'nav-data.json'
 
@@ -61,23 +61,23 @@ export async function GET() {
       return NextResponse.json(DEFAULT_DATA)
     }
 
-    // Check if blob exists
-    console.log('[v0] Checking blob existence for key:', BLOB_KEY)
-    const blobInfo = await head(BLOB_KEY).catch((err) => {
-      console.log('[v0] head() error (blob may not exist):', err?.message)
+    // Read blob using get() for private store
+    console.log('[v0] Reading blob for key:', BLOB_KEY)
+    const result = await get(BLOB_KEY, { access: 'private' }).catch((err) => {
+      console.log('[v0] get() error (blob may not exist):', err?.message)
       return null
     })
     
-    if (!blobInfo) {
+    if (!result) {
       console.log('[v0] Blob does not exist, returning default data')
       return NextResponse.json(DEFAULT_DATA)
     }
 
-    console.log('[v0] Blob found, URL:', blobInfo.url)
+    console.log('[v0] Blob found, reading content...')
     
-    // Fetch the blob content
-    const response = await fetch(blobInfo.url)
-    const data = await response.json()
+    // Read the blob content from stream
+    const text = await result.text()
+    const data = JSON.parse(text)
     
     console.log('[v0] Blob data fetched, groups count:', data?.groups?.length)
     return NextResponse.json(data)
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     console.log('[v0] Data received, groups count:', data?.groups?.length)
     
     const result = await put(BLOB_KEY, JSON.stringify(data), {
-      access: 'public',
+      access: 'private',
       addRandomSuffix: false,
     })
 

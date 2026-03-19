@@ -1,5 +1,7 @@
 'use client'
 
+// State management for navigation bookmarks with cloud sync support
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { v4 as uuid } from 'uuid'
 import type { Group, Bookmark, Theme, NavData } from './types'
