@@ -5,6 +5,7 @@ export interface Bookmark {
   name: string
   url: string
   order: number
+  pinned?: boolean // pinned to the quick-access bar
 }
 
 export interface Group {

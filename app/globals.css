@@ -138,3 +138,17 @@
 .drag-over {
   @apply ring-2 ring-primary ring-offset-2;
 }
+
+/* hide scrollbar but keep scrollable */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}

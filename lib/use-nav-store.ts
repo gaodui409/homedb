@@ -164,6 +164,46 @@ export function useNavStore() {
     [setGroups]
   )
 
+  // Move a bookmark from one group to another (cross-group drag)
+  const moveBookmark = useCallback(
+    (fromGroupId: string, toGroupId: string, bookmarkId: string, toIndex: number) => {
+      setGroups((prev) => {
+        let movedBm: Bookmark | null = null
+        const step1 = prev.map((g) => {
+          if (g.id !== fromGroupId) return g
+          movedBm = g.bookmarks.find((b) => b.id === bookmarkId) ?? null
+          return { ...g, bookmarks: g.bookmarks.filter((b) => b.id !== bookmarkId) }
+        })
+        if (!movedBm) return prev
+        return step1.map((g) => {
+          if (g.id !== toGroupId) return g
+          const sorted = [...g.bookmarks].sort((a, b) => a.order - b.order)
+          sorted.splice(toIndex, 0, movedBm!)
+          return { ...g, bookmarks: sorted.map((b, i) => ({ ...b, order: i })) }
+        })
+      })
+    },
+    [setGroups]
+  )
+
+  // Toggle pinned state
+  const togglePinBookmark = useCallback(
+    (groupId: string, bookmarkId: string) => {
+      setGroups((prev) =>
+        prev.map((g) => {
+          if (g.id !== groupId) return g
+          return {
+            ...g,
+            bookmarks: g.bookmarks.map((b) =>
+              b.id === bookmarkId ? { ...b, pinned: !b.pinned } : b
+            ),
+          }
+        })
+      )
+    },
+    [setGroups]
+  )
+
   // JSON Import / Export
   const exportData = useCallback(() => {
     const data: NavData = { groups }
@@ -223,6 +263,8 @@ export function useNavStore() {
     updateBookmark,
     deleteBookmark,
     reorderBookmarks,
+    moveBookmark,
+    togglePinBookmark,
     exportData,
     importData,
   }
