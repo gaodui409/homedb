@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { v4 as uuid } from 'uuid'
+import { useState, useEffect, useCallback } from 'react'import { v4 as uuid } from 'uuid'
 import type { Group, Bookmark, Theme, NavData } from './types'
 import { DEFAULT_DATA } from './default-data'
 
@@ -10,7 +9,6 @@ const THEME_KEY = 'mininav_theme'
 const TITLE_KEY = 'mininav_title'
 
 function loadGroups(): Group[] {
-  if (typeof window === 'undefined') return DEFAULT_DATA
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_DATA
@@ -28,16 +26,15 @@ function saveGroups(groups: Group[]) {
 }
 
 function loadTheme(): Theme {
-  if (typeof window === 'undefined') return 'light'
   return (localStorage.getItem(THEME_KEY) as Theme) ?? 'light'
 }
 
 function loadTitle(): string {
-  if (typeof window === 'undefined') return '我的导航'
   return localStorage.getItem(TITLE_KEY) ?? '我的导航'
 }
 
 export function useNavStore() {
+  // This hook is only ever called inside <ClientOnly>, so localStorage is always available.
   const [groups, setGroupsState] = useState<Group[]>(() => loadGroups())
   const [theme, setThemeState] = useState<Theme>(() => loadTheme())
   const [title, setTitleState] = useState<string>(() => loadTitle())
