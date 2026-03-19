@@ -43,58 +43,77 @@ const DEFAULT_DATA = {
 }
 
 // Check if Blob is configured
-async function isBlobConfigured(): Promise<boolean> {
-  return !!process.env.BLOB_READ_WRITE_TOKEN
+function isBlobConfigured(): boolean {
+  const configured = !!process.env.BLOB_READ_WRITE_TOKEN
+  console.log('[v0] Blob configured:', configured)
+  return configured
 }
 
 // GET: Read data from Vercel Blob
 export async function GET() {
+  console.log('[v0] GET /api/data called')
+  
   try {
-    const blobConfigured = await isBlobConfigured()
+    const blobConfigured = isBlobConfigured()
     
     if (!blobConfigured) {
-      // Return default data if Blob is not configured (local development)
+      console.log('[v0] Blob not configured, returning default data')
       return NextResponse.json(DEFAULT_DATA)
     }
 
     // Check if blob exists
-    const blobInfo = await head(BLOB_KEY).catch(() => null)
+    console.log('[v0] Checking blob existence for key:', BLOB_KEY)
+    const blobInfo = await head(BLOB_KEY).catch((err) => {
+      console.log('[v0] head() error (blob may not exist):', err?.message)
+      return null
+    })
     
     if (!blobInfo) {
+      console.log('[v0] Blob does not exist, returning default data')
       return NextResponse.json(DEFAULT_DATA)
     }
 
+    console.log('[v0] Blob found, URL:', blobInfo.url)
+    
     // Fetch the blob content
     const response = await fetch(blobInfo.url)
     const data = await response.json()
     
+    console.log('[v0] Blob data fetched, groups count:', data?.groups?.length)
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Error reading from Blob:', error)
+    console.error('[v0] Error reading from Blob:', error)
     return NextResponse.json(DEFAULT_DATA)
   }
 }
 
 // POST: Write data to Vercel Blob
 export async function POST(request: NextRequest) {
+  console.log('[v0] POST /api/data called')
+  
   try {
-    const blobConfigured = await isBlobConfigured()
+    const blobConfigured = isBlobConfigured()
     
     if (!blobConfigured) {
-      // In local development without Blob, just acknowledge the save
-      return NextResponse.json({ success: true, local: true })
+      console.log('[v0] Blob not configured, skipping cloud save')
+      return NextResponse.json({ success: true, local: true, message: 'Blob not configured' })
     }
 
     const data = await request.json()
+    console.log('[v0] Data received, groups count:', data?.groups?.length)
     
-    await put(BLOB_KEY, JSON.stringify(data), {
+    const result = await put(BLOB_KEY, JSON.stringify(data), {
       access: 'public',
       addRandomSuffix: false,
     })
 
-    return NextResponse.json({ success: true })
+    console.log('[v0] Blob put successful, URL:', result.url)
+    return NextResponse.json({ success: true, url: result.url })
   } catch (error) {
-    console.error('Error writing to Blob:', error)
-    return NextResponse.json({ error: 'Failed to save data' }, { status: 500 })
+    console.error('[v0] Error writing to Blob:', error)
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Failed to save data' },
+      { status: 500 }
+    )
   }
 }
