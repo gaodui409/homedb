@@ -68,15 +68,16 @@ export async function GET() {
       return null
     })
     
-    if (!result) {
-      console.log('[v0] Blob does not exist, returning default data')
+    if (!result || result.statusCode !== 200) {
+      console.log('[v0] Blob does not exist or error, returning default data')
       return NextResponse.json(DEFAULT_DATA)
     }
 
     console.log('[v0] Blob found, reading content...')
     
-    // Read the blob content from stream
-    const text = await result.text()
+    // Read the blob content using Response wrapper for stream
+    const response = new Response(result.stream)
+    const text = await response.text()
     const data = JSON.parse(text)
     
     console.log('[v0] Blob data fetched, groups count:', data?.groups?.length)

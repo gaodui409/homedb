@@ -1,9 +1,11 @@
 'use client'
 
-// State management for navigation bookmarks with cloud sync support
+// Navigation store - updated 2026-03-19
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+
 import { v4 as uuid } from 'uuid'
+
 import type { Group, Bookmark, Theme, NavData } from './types'
 import { DEFAULT_DATA } from './default-data'
 
@@ -92,12 +94,31 @@ export function useNavStore() {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
         if (res.ok) {
-          const data = await res.json()
-          console.log('[v0] Cloud data received:', data)
-          if (data.groups && Array.isArray(data.groups)) {
-            setGroupsState(data.groups)
-            saveGroupsLocal(data.groups)
-            console.log('[v0] State and localStorage updated from cloud')
+          const cloudData = await res.json()
+          console.log('[v0] Cloud data received:', cloudData)
+          
+          if (cloudData.groups && Array.isArray(cloudData.groups)) {
+            const isCloudDefault = cloudData.groups.every((g: Group) => 
+              g.id.startsWith('default-')
+            )
+            
+            const localData = loadGroups()
+            const isLocalDefault = localData.every((g: Group) => 
+              g.id.startsWith('default-')
+            )
+            
+            console.log('[v0] isCloudDefault:', isCloudDefault, 'isLocalDefault:', isLocalDefault)
+            
+            if (isCloudDefault && !isLocalDefault) {
+              console.log('[v0] Cloud is default, local has real data - syncing local to cloud')
+              syncToCloud(localData)
+            } else if (!isCloudDefault) {
+              console.log('[v0] Cloud has real data - updating local')
+              setGroupsState(cloudData.groups)
+              saveGroupsLocal(cloudData.groups)
+            } else {
+              console.log('[v0] Both are default - keeping local')
+            }
           }
         }
       } catch (err) {
@@ -105,7 +126,7 @@ export function useNavStore() {
       }
     }
     loadFromCloud()
-  }, [])
+  }, [syncToCloud])
 
   const setGroups = useCallback(
     (g: Group[] | ((prev: Group[]) => Group[])) => {
