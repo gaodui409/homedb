@@ -1,9 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
 
-// In-memory token store (in production, use a proper session store or JWT)
-// For simplicity, we use a Set to store valid tokens
-const validTokens = new Set<string>()
+const TOKEN_EXPIRY_DAYS = 30
 
+// Create HMAC-signed stateless token
+function createToken(): string {
+  const secret = process.env.NAV_PASSWORD || 'secret'
+  const timestamp = Date.now().toString()
+  const hmac = crypto.createHmac('sha256', secret).update(timestamp).digest('hex')
+  return `${timestamp}.${hmac}`
+}
+
+// Verify HMAC token and check expiry
+function verifyToken(token: string): boolean {
+  const secret = process.env.NAV_PASSWORD || 'secret'
+  const parts = token.split('.')
+  if (parts.length !== 2) return false
+  
+  const [timestamp, providedHmac] = parts
+  const expectedHmac = crypto.createHmac('sha256', secret).update(timestamp).digest('hex')
+  
+  // Timing-safe comparison
+  if (!crypto.timingSafeEqual(Buffer.from(providedHmac), Buffer.from(expectedHmac))) {
+    return false
+  }
+  
+  // Check expiry (30 days)
+  const tokenTime = parseInt(timestamp, 10)
+  const now = Date.now()
+  const maxAge = TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000
+  
+  return now - tokenTime < maxAge
+}
+
+// POST: Login with password
 export async function POST(request: NextRequest) {
   const password = process.env.NAV_PASSWORD
 
@@ -17,8 +47,7 @@ export async function POST(request: NextRequest) {
     const inputPassword = body.password
 
     if (inputPassword === password) {
-      const token = crypto.randomUUID()
-      validTokens.add(token)
+      const token = createToken()
       return NextResponse.json({ token })
     } else {
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
@@ -28,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Validate token endpoint
+// GET: Validate token
 export async function GET(request: NextRequest) {
   const password = process.env.NAV_PASSWORD
 
@@ -49,7 +78,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: true, noAuth: true })
   }
 
-  if (validTokens.has(token)) {
+  if (verifyToken(token)) {
     return NextResponse.json({ valid: true })
   }
 

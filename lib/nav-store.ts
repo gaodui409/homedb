@@ -92,12 +92,36 @@ export function useNavStore() {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
         if (res.ok) {
-          const data = await res.json()
-          console.log('[v0] Cloud data received:', data)
-          if (data.groups && Array.isArray(data.groups)) {
-            setGroupsState(data.groups)
-            saveGroupsLocal(data.groups)
-            console.log('[v0] State and localStorage updated from cloud')
+          const cloudData = await res.json()
+          console.log('[v0] Cloud data received:', cloudData)
+          
+          if (cloudData.groups && Array.isArray(cloudData.groups)) {
+            // Check if cloud data is default (all group ids start with 'default-')
+            const isCloudDefault = cloudData.groups.every((g: Group) => 
+              g.id.startsWith('default-')
+            )
+            
+            // Get current local data
+            const localData = loadGroups()
+            const isLocalDefault = localData.every((g: Group) => 
+              g.id.startsWith('default-')
+            )
+            
+            console.log('[v0] isCloudDefault:', isCloudDefault, 'isLocalDefault:', isLocalDefault)
+            
+            if (isCloudDefault && !isLocalDefault) {
+              // Cloud has default but local has real data - push local to cloud
+              console.log('[v0] Cloud is default, local has real data - syncing local to cloud')
+              syncToCloud(localData)
+            } else if (!isCloudDefault) {
+              // Cloud has real data - use it
+              console.log('[v0] Cloud has real data - updating local')
+              setGroupsState(cloudData.groups)
+              saveGroupsLocal(cloudData.groups)
+            } else {
+              // Both are default - keep local
+              console.log('[v0] Both are default - keeping local')
+            }
           }
         }
       } catch (err) {
@@ -105,7 +129,7 @@ export function useNavStore() {
       }
     }
     loadFromCloud()
-  }, [])
+  }, [syncToCloud])
 
   const setGroups = useCallback(
     (g: Group[] | ((prev: Group[]) => Group[])) => {
