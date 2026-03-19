@@ -79,7 +79,7 @@ export interface BookmarkModalState {
 interface BookmarkModalProps {
   state: BookmarkModalState
   groups: Group[]
-  onSave: (groupId: string, name: string, url: string, newGroupId: string) => void
+  onSave: (groupId: string, name: string, url: string, icon: string, newGroupId: string) => void
   onClose: () => void
 }
 
@@ -96,9 +96,11 @@ export function BookmarkModal({ state, groups, onSave, onClose }: BookmarkModalP
   const isEdit = !!state.bookmark
   const [name, setName] = useState(state.bookmark?.name ?? '')
   const [url, setUrl] = useState(state.bookmark?.url ?? '')
+  const [icon, setIcon] = useState(state.bookmark?.icon ?? '')
   const [selectedGroupId, setSelectedGroupId] = useState(state.groupId)
   const [faviconError, setFaviconError] = useState(false)
-  const faviconUrl = getFaviconUrl(url)
+  // Use custom icon if set, otherwise auto-detect favicon
+  const previewIconUrl = icon.trim() || getFaviconUrl(url)
 
   // Reset favicon error when url changes
   useEffect(() => { setFaviconError(false) }, [url])
@@ -107,20 +109,20 @@ export function BookmarkModal({ state, groups, onSave, onClose }: BookmarkModalP
     e.preventDefault()
     if (!name.trim() || !url.trim()) return
     const finalUrl = url.startsWith('http') ? url : `https://${url}`
-    onSave(state.groupId, name.trim(), finalUrl, selectedGroupId)
+    onSave(state.groupId, name.trim(), finalUrl, icon.trim(), selectedGroupId)
     onClose()
   }
 
   return (
     <ModalShell title={isEdit ? '编辑书签' : '添加书签'} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Favicon Preview */}
+        {/* Icon Preview */}
         {url && (
           <div className="flex items-center gap-3 p-3 rounded-xl bg-accent border border-border">
             <div className="size-8 rounded-lg overflow-hidden flex items-center justify-center bg-primary/10 flex-shrink-0">
-              {!faviconError && faviconUrl ? (
+              {!faviconError && previewIconUrl ? (
                 <img
-                  src={faviconUrl}
+                  src={previewIconUrl}
                   alt="网站图标"
                   width={32}
                   height={32}
@@ -167,6 +169,16 @@ export function BookmarkModal({ state, groups, onSave, onClose }: BookmarkModalP
             onChange={(e) => setUrl(e.target.value)}
             placeholder="https://..."
             required
+          />
+        </FormField>
+
+        <FormField label="自定义图标 URL（可选）">
+          <input
+            className={inputCls}
+            type="text"
+            value={icon}
+            onChange={(e) => { setIcon(e.target.value); setFaviconError(false) }}
+            placeholder="留空则自动获取网站图标"
           />
         </FormField>
 

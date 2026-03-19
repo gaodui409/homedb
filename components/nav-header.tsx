@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import {
   Sun, BookOpen, Moon, Settings, Download, Upload,
-  Plus, Check, X, Pencil, MoreVertical,
+  Plus, Check, X, Pencil, MoreVertical, LogOut, Cloud, CloudOff,
 } from 'lucide-react'
 import type { Theme, NavData } from '@/lib/types'
 
@@ -11,12 +11,14 @@ interface NavHeaderProps {
   title: string
   theme: Theme
   adminMode: boolean
+  syncing?: boolean
   onThemeChange: (t: Theme) => void
   onTitleChange: (t: string) => void
   onAdminToggle: () => void
   onAddGroup: () => void
   onExport: () => void
   onImportFile: (data: NavData, fileName: string) => void
+  onLogout?: () => void
 }
 
 const THEMES: { key: Theme; icon: React.ReactNode; label: string }[] = [
@@ -29,12 +31,14 @@ export function NavHeader({
   title,
   theme,
   adminMode,
+  syncing,
   onThemeChange,
   onTitleChange,
   onAdminToggle,
   onAddGroup,
   onExport,
   onImportFile,
+  onLogout,
 }: NavHeaderProps) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(title)
@@ -224,6 +228,20 @@ export function NavHeader({
               ))}
             </div>
 
+            {/* Sync indicator */}
+            {syncing !== undefined && (
+              <div
+                className="h-8 w-8 flex items-center justify-center"
+                title={syncing ? '正在同步...' : '已同步'}
+              >
+                {syncing ? (
+                  <Cloud size={15} className="text-primary animate-pulse" />
+                ) : (
+                  <CloudOff size={15} className="text-muted-foreground/50" />
+                )}
+              </div>
+            )}
+
             {/* Admin toggle */}
             <button
               onClick={onAdminToggle}
@@ -238,6 +256,18 @@ export function NavHeader({
             >
               <Settings size={15} />
             </button>
+
+            {/* Logout button */}
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                title="退出登录"
+                aria-label="退出登录"
+              >
+                <LogOut size={15} />
+              </button>
+            )}
           </div>
         </div>
       </div>

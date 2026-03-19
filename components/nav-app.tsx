@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable'
-import { useNavStore } from '@/lib/use-nav-store'
+import { useNavStore, clearToken } from '@/lib/use-nav-store'
 import { NavHeader } from '@/components/nav-header'
 import { SortableGroup } from '@/components/bookmark-group'
 import { BookmarkCard } from '@/components/bookmark-card'
@@ -92,6 +92,11 @@ export function NavApp() {
 
   const findGroupByBookmarkId = (bookmarkId: string): Group | undefined =>
     store.groups.find((g) => g.bookmarks.some((b) => b.id === bookmarkId))
+
+  const handleLogout = () => {
+    clearToken()
+    window.location.reload()
+  }
 
   const handleDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current
@@ -177,6 +182,7 @@ export function NavApp() {
         title={store.title}
         theme={store.theme}
         adminMode={store.adminMode}
+        syncing={store.syncing}
         onThemeChange={store.setTheme}
         onTitleChange={store.setTitle}
         onAdminToggle={() => store.setAdminMode(!store.adminMode)}
@@ -185,6 +191,7 @@ export function NavApp() {
         onImportFile={(data, fileName) =>
           setModal({ type: 'importMode', data, fileName })
         }
+        onLogout={handleLogout}
       />
 
       <QuickBar
@@ -316,17 +323,18 @@ export function NavApp() {
               : { groupId: modal.groupId }
           }
           groups={store.groups}
-          onSave={(sourceGroupId, name, url, newGroupId) => {
+          onSave={(sourceGroupId, name, url, icon, newGroupId) => {
             if (modal.type === 'editBookmark') {
               store.updateBookmark(
                 sourceGroupId,
                 modal.bookmark.id,
                 name,
                 url,
+                icon,
                 newGroupId !== sourceGroupId ? newGroupId : undefined
               )
             } else {
-              store.addBookmark(newGroupId, name, url)
+              store.addBookmark(newGroupId, name, url, icon)
             }
           }}
           onClose={() => setModal({ type: 'none' })}

@@ -1,4 +1,5 @@
 import { ClientOnly } from '@/components/client-only'
+import { AuthGuard } from '@/components/auth-guard'
 import { NavApp } from '@/components/nav-app'
 
 export default function HomePage() {
@@ -10,7 +11,9 @@ export default function HomePage() {
         </div>
       }
     >
-      <NavApp />
+      <AuthGuard>
+        <NavApp />
+      </AuthGuard>
     </ClientOnly>
   )
 }

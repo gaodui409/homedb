@@ -56,7 +56,8 @@ export function BookmarkCard({
   onTogglePin,
 }: BookmarkCardProps) {
   const [imgError, setImgError] = useState(false)
-  const faviconUrl = getFaviconUrl(bookmark.url)
+  // Use custom icon if available, otherwise fallback to favicon
+  const iconUrl = bookmark.icon || getFaviconUrl(bookmark.url)
   const avatarColor = getAvatarColor(bookmark.name)
 
   const {
@@ -109,14 +110,14 @@ export function BookmarkCard({
       }}
       {...(adminMode ? { ...attributes, ...listeners } : {})}
     >
-      {/* Favicon */}
+      {/* Icon */}
       <div
         className="flex-shrink-0 size-9 rounded-lg overflow-hidden flex items-center justify-center text-white text-sm font-semibold"
-        style={imgError || !faviconUrl ? { backgroundColor: avatarColor } : undefined}
+        style={imgError || !iconUrl ? { backgroundColor: avatarColor } : undefined}
       >
-        {!imgError && faviconUrl ? (
+        {!imgError && iconUrl ? (
           <img
-            src={faviconUrl}
+            src={iconUrl}
             alt={bookmark.name}
             width={36}
             height={36}
