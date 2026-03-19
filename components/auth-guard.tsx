@@ -2,7 +2,7 @@
 
 import { useState, useEffect, ReactNode } from 'react'
 import { Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
-import { getToken, setToken } from '@/lib/nav-store'
+import { getToken, setToken } from '@/lib/use-nav-store'
 
 interface AuthGuardProps {
   children: ReactNode

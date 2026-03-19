@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from '@dnd-kit/sortable'
-import { useNavStore, clearToken } from '@/lib/nav-store'
+import { useNavStore, clearToken } from '@/lib/use-nav-store'
 import { NavHeader } from '@/components/nav-header'
 import { SortableGroup } from '@/components/bookmark-group'
 import { BookmarkCard } from '@/components/bookmark-card'
