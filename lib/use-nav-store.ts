@@ -10,7 +10,6 @@ const THEME_KEY = 'mininav_theme'
 const TITLE_KEY = 'mininav_title'
 const TOKEN_KEY = 'mininav_token'
 
-// Local storage helpers
 function loadGroups(): Group[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -36,7 +35,6 @@ function loadTitle(): string {
   return localStorage.getItem(TITLE_KEY) ?? '我的导航'
 }
 
-// Token helpers
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -57,7 +55,6 @@ export function useNavStore() {
   const [syncing, setSyncing] = useState(false)
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Sync to cloud (debounced, fire-and-forget)
   const syncToCloud = useCallback((data: Group[]) => {
     if (syncTimeoutRef.current) {
       clearTimeout(syncTimeoutRef.current)
@@ -66,7 +63,7 @@ export function useNavStore() {
       try {
         setSyncing(true)
         const token = getToken()
-        await fetch('/api/data', {
+        const res = await fetch('/api/data', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -74,31 +71,35 @@ export function useNavStore() {
           },
           body: JSON.stringify({ groups: data }),
         })
-      } catch {
-        // Silent fail - data is still in localStorage
+        const result = await res.json()
+        console.log('[v0] Cloud sync result:', result)
+      } catch (err) {
+        console.log('[v0] Cloud sync failed:', err)
       } finally {
         setSyncing(false)
       }
     }, 500)
   }, [])
 
-  // Load from cloud on mount
   useEffect(() => {
     async function loadFromCloud() {
       try {
+        console.log('[v0] Loading from cloud...')
         const token = getToken()
         const res = await fetch('/api/data', {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
         if (res.ok) {
           const data = await res.json()
+          console.log('[v0] Cloud data received:', data)
           if (data.groups && Array.isArray(data.groups)) {
             setGroupsState(data.groups)
             saveGroupsLocal(data.groups)
+            console.log('[v0] State and localStorage updated from cloud')
           }
         }
-      } catch {
-        // Silent fail - use localStorage data
+      } catch (err) {
+        console.log('[v0] Load from cloud failed:', err)
       }
     }
     loadFromCloud()
@@ -126,7 +127,6 @@ export function useNavStore() {
     localStorage.setItem(TITLE_KEY, t)
   }, [])
 
-  // Apply theme class to html element
   useEffect(() => {
     const html = document.documentElement
     html.classList.remove('theme-sepia', 'theme-dark')
@@ -134,7 +134,6 @@ export function useNavStore() {
     if (theme === 'dark') html.classList.add('theme-dark')
   }, [theme])
 
-  // Groups CRUD
   const addGroup = useCallback(
     (name: string, color: string) => {
       setGroups((prev) => [
@@ -167,7 +166,6 @@ export function useNavStore() {
     [setGroups]
   )
 
-  // Bookmarks CRUD
   const addBookmark = useCallback(
     (groupId: string, name: string, url: string, icon?: string) => {
       setGroups((prev) =>
@@ -208,7 +206,6 @@ export function useNavStore() {
             }
           })
         }
-        // Move to another group
         let movedBm: Bookmark | null = null
         const updated = prev.map((g) => {
           if (g.id === groupId) {
@@ -293,7 +290,6 @@ export function useNavStore() {
     [setGroups]
   )
 
-  // JSON Import / Export
   const exportData = useCallback(() => {
     const data: NavData = { groups }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
