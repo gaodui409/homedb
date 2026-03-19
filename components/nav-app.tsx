@@ -50,11 +50,28 @@ export function NavApp() {
   const store = useNavStore()
   const [modal, setModal] = useState<ModalState>({ type: 'none' })
   const [activeDrag, setActiveDrag] = useState<ActiveDrag>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const sortedGroups = useMemo(
     () => [...store.groups].sort((a, b) => a.order - b.order),
     [store.groups]
   )
+
+  // Filter groups and bookmarks based on search query
+  const filteredGroups = useMemo(() => {
+    if (!searchQuery.trim()) return sortedGroups
+    const q = searchQuery.toLowerCase()
+    return sortedGroups
+      .map((group) => ({
+        ...group,
+        bookmarks: group.bookmarks.filter(
+          (b) =>
+            b.name.toLowerCase().includes(q) ||
+            b.url.toLowerCase().includes(q)
+        ),
+      }))
+      .filter((group) => group.bookmarks.length > 0)
+  }, [sortedGroups, searchQuery])
 
   const groupIds = useMemo(() => sortedGroups.map((g) => g.id), [sortedGroups])
 
@@ -174,6 +191,8 @@ export function NavApp() {
         groups={sortedGroups}
         pinnedBookmarks={pinnedBookmarks}
         adminMode={store.adminMode}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -184,7 +203,7 @@ export function NavApp() {
           </div>
         )}
 
-        {sortedGroups.length === 0 ? (
+        {filteredGroups.length === 0 && !searchQuery ? (
           <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
             <p className="text-muted-foreground text-base">暂无书签分组</p>
             {store.adminMode && (
@@ -196,6 +215,18 @@ export function NavApp() {
               </button>
             )}
           </div>
+        ) : filteredGroups.length === 0 && searchQuery ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
+            <p className="text-muted-foreground text-base">
+              未找到匹配「{searchQuery}」的书签
+            </p>
+            <button
+              onClick={() => setSearchQuery('')}
+              className="px-4 py-2 rounded-lg bg-accent text-foreground text-sm font-medium hover:bg-accent/80 transition-colors"
+            >
+              清除搜索
+            </button>
+          </div>
         ) : (
           <DndContext
             sensors={sensors}
@@ -206,7 +237,7 @@ export function NavApp() {
           >
             <SortableContext items={groupIds} strategy={verticalListSortingStrategy}>
               <div className="flex flex-col gap-8">
-                {sortedGroups.map((group) => (
+                {filteredGroups.map((group) => (
                   <SortableGroup
                     key={group.id}
                     group={group}
@@ -232,7 +263,7 @@ export function NavApp() {
                   />
                 ))}
 
-                {store.adminMode && (
+                {store.adminMode && !searchQuery && (
                   <button
                     onClick={() => setModal({ type: 'addGroup' })}
                     className="w-full rounded-2xl border-2 border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors py-5 text-sm flex items-center justify-center gap-2"

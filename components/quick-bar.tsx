@@ -1,12 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { Search, X } from 'lucide-react'
 import type { Group, Bookmark } from '@/lib/types'
 
 interface QuickBarProps {
   groups: Group[]
   pinnedBookmarks: { bookmark: Bookmark; groupId: string }[]
   adminMode: boolean
+  searchQuery: string
+  onSearchChange: (query: string) => void
 }
 
 function getFaviconUrl(url: string): string {
@@ -68,31 +71,57 @@ function PinnedItem({ bookmark }: { bookmark: Bookmark }) {
   )
 }
 
-export function QuickBar({ groups, pinnedBookmarks, adminMode }: QuickBarProps) {
+export function QuickBar({ groups, pinnedBookmarks, adminMode, searchQuery, onSearchChange }: QuickBarProps) {
   const hasPinned = pinnedBookmarks.length > 0
 
   return (
     <div className="border-b border-border bg-background/95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Group anchor nav */}
-        <div className="flex items-center gap-1 py-2 overflow-x-auto scrollbar-none">
-          {groups.map((group) => (
-            <a
-              key={group.id}
-              href={`#group-${group.id}`}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors whitespace-nowrap flex-shrink-0"
-            >
-              <span
-                className="size-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: group.color }}
+        {/* Group anchor nav + Search */}
+        <div className="flex items-center gap-2 py-2">
+          {/* Group links - scrollable */}
+          <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none min-w-0">
+            {groups.map((group) => (
+              <a
+                key={group.id}
+                href={`#group-${group.id}`}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors whitespace-nowrap flex-shrink-0"
+              >
+                <span
+                  className="size-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: group.color }}
+                />
+                {group.name}
+              </a>
+            ))}
+          </div>
+
+          {/* Search box */}
+          <div className="relative flex-shrink-0">
+            <div className="flex items-center h-8 rounded-lg border border-border bg-background overflow-hidden transition-all focus-within:ring-2 focus-within:ring-primary/30">
+              <Search size={14} className="ml-2.5 text-muted-foreground flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="搜索书签..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-24 sm:w-32 h-full px-2 text-xs bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none"
               />
-              {group.name}
-            </a>
-          ))}
+              {searchQuery && (
+                <button
+                  onClick={() => onSearchChange('')}
+                  className="mr-1.5 p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  aria-label="清除搜索"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Pinned / Quick-access row */}
-        {(hasPinned || adminMode) && (
+        {(hasPinned || adminMode) && !searchQuery && (
           <div className="pb-2">
             <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-none">
               {hasPinned ? (

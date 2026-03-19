@@ -214,14 +214,42 @@ export function useNavStore() {
     URL.revokeObjectURL(url)
   }, [groups])
 
+  // Normalize imported data: auto-generate missing ids, orders, colors
+  const normalizeImportData = useCallback((data: NavData): Group[] => {
+    const defaultColors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16']
+    
+    return (data.groups || []).map((g, gIndex) => {
+      const groupId = g.id || uuid()
+      const groupColor = g.color || defaultColors[gIndex % defaultColors.length]
+      
+      const normalizedBookmarks: Bookmark[] = (g.bookmarks || []).map((b, bIndex) => ({
+        id: b.id || uuid(),
+        name: b.name,
+        url: b.url,
+        order: typeof b.order === 'number' ? b.order : bIndex,
+        pinned: b.pinned ?? false,
+      }))
+      
+      return {
+        id: groupId,
+        name: g.name,
+        order: typeof g.order === 'number' ? g.order : gIndex,
+        color: groupColor,
+        bookmarks: normalizedBookmarks,
+      }
+    })
+  }, [])
+
   const importData = useCallback(
     (data: NavData, mode: 'overwrite' | 'merge') => {
+      const normalizedGroups = normalizeImportData(data)
+      
       if (mode === 'overwrite') {
-        setGroups(data.groups)
+        setGroups(normalizedGroups)
       } else {
         setGroups((prev) => {
           const merged = [...prev]
-          for (const incoming of data.groups) {
+          for (const incoming of normalizedGroups) {
             const existing = merged.find((g) => g.id === incoming.id)
             if (existing) {
               const idx = merged.indexOf(existing)
@@ -242,7 +270,7 @@ export function useNavStore() {
         })
       }
     },
-    [setGroups]
+    [setGroups, normalizeImportData]
   )
 
   return {
