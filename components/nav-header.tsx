@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import {
   Sun, BookOpen, Moon, Settings, Download, Upload,
-  Plus, Check, X, Pencil,
+  Plus, Check, X, Pencil, MoreVertical,
 } from 'lucide-react'
 import type { Theme, NavData } from '@/lib/types'
 
@@ -38,6 +38,7 @@ export function NavHeader({
 }: NavHeaderProps) {
   const [editingTitle, setEditingTitle] = useState(false)
   const [draftTitle, setDraftTitle] = useState(title)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const commitTitle = () => {
@@ -61,6 +62,7 @@ export function NavHeader({
     }
     reader.readAsText(file)
     e.target.value = ''
+    setMobileMenuOpen(false)
   }
 
   return (
@@ -118,9 +120,10 @@ export function NavHeader({
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5">
-            {/* Admin: JSON import / export / add group */}
+            {/* Admin actions */}
             {adminMode && (
               <>
+                {/* Desktop: show buttons directly */}
                 <button
                   onClick={onExport}
                   className="hidden sm:flex items-center gap-1.5 px-3 h-8 text-xs font-medium rounded-lg border border-border text-foreground hover:bg-accent transition-colors"
@@ -139,12 +142,57 @@ export function NavHeader({
                 </button>
                 <button
                   onClick={onAddGroup}
-                  className="flex items-center gap-1.5 px-3 h-8 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+                  className="hidden sm:flex items-center gap-1.5 px-3 h-8 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
                   title="新建分组"
                 >
                   <Plus size={13} />
-                  <span className="hidden sm:inline">新建分组</span>
+                  <span>新建分组</span>
                 </button>
+
+                {/* Mobile: dropdown menu */}
+                <div className="relative sm:hidden">
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="h-8 w-8 flex items-center justify-center rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                    aria-label="更多操作"
+                    aria-expanded={mobileMenuOpen}
+                  >
+                    <MoreVertical size={15} />
+                  </button>
+                  {mobileMenuOpen && (
+                    <>
+                      {/* Backdrop to close menu */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setMobileMenuOpen(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] py-1 rounded-lg border border-border bg-card shadow-lg">
+                        <button
+                          onClick={() => { onAddGroup(); setMobileMenuOpen(false) }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                        >
+                          <Plus size={14} />
+                          <span>新建分组</span>
+                        </button>
+                        <button
+                          onClick={() => { onExport(); setMobileMenuOpen(false) }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                        >
+                          <Download size={14} />
+                          <span>导出 JSON</span>
+                        </button>
+                        <button
+                          onClick={() => { fileInputRef.current?.click() }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                        >
+                          <Upload size={14} />
+                          <span>导入 JSON</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+
                 <input
                   ref={fileInputRef}
                   type="file"
