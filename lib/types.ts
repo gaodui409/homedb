@@ -6,6 +6,7 @@ export interface Bookmark {
   url: string
   order: number
   pinned?: boolean // pinned to the quick-access bar
+  icon?: string // custom icon URL (optional)
 }
 
 export interface Group {
