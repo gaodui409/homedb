@@ -57,7 +57,10 @@ export function useNavStore() {
   const [title, setTitleState] = useState<string>(() => loadTitle())
   const [adminMode, setAdminMode] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  const clearSyncError = useCallback(() => setSyncError(null), [])
 
   const syncToCloud = useCallback((data: Group[]) => {
     if (syncTimeoutRef.current) {
@@ -66,6 +69,7 @@ export function useNavStore() {
     syncTimeoutRef.current = setTimeout(async () => {
       try {
         setSyncing(true)
+        setSyncError(null)
         const token = getToken()
         const res = await fetch('/api/data', {
           method: 'POST',
@@ -76,9 +80,12 @@ export function useNavStore() {
           body: JSON.stringify({ groups: data }),
         })
         const result = await res.json()
-        console.log('[v0] Cloud sync result:', result)
+        if (!res.ok || !result.success) {
+          setSyncError('云端同步失败')
+        }
       } catch (err) {
         console.log('[v0] Cloud sync failed:', err)
+        setSyncError('云端同步失败')
       } finally {
         setSyncing(false)
       }
@@ -398,6 +405,9 @@ export function useNavStore() {
     title,
     adminMode,
     syncing,
+    syncError,
+    clearSyncError,
+    retrySyncToCloud: () => syncToCloud(groups),
     setTheme,
     setTitle,
     setAdminMode,

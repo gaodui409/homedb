@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -19,6 +19,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { useNavStore, clearToken } from '@/lib/use-nav-store'
+import { AlertTriangle, X, RefreshCw } from 'lucide-react'
 import { NavHeader } from '@/components/nav-header'
 import { SortableGroup } from '@/components/bookmark-group'
 import { BookmarkCard } from '@/components/bookmark-card'
@@ -378,6 +379,54 @@ export function NavApp() {
           onClose={() => setModal({ type: 'none' })}
         />
       )}
+
+      {/* Sync Error Toast */}
+      <SyncErrorToast
+        error={store.syncError}
+        onRetry={store.retrySyncToCloud}
+        onDismiss={store.clearSyncError}
+      />
+    </div>
+  )
+}
+
+function SyncErrorToast({
+  error,
+  onRetry,
+  onDismiss,
+}: {
+  error: string | null
+  onRetry: () => void
+  onDismiss: () => void
+}) {
+  useEffect(() => {
+    if (!error) return
+    const timer = setTimeout(onDismiss, 8000)
+    return () => clearTimeout(timer)
+  }, [error, onDismiss])
+
+  if (!error) return null
+
+  return (
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-destructive text-destructive-foreground shadow-lg">
+        <AlertTriangle size={18} />
+        <span className="text-sm font-medium">{error}</span>
+        <button
+          onClick={onRetry}
+          className="flex items-center gap-1 px-2 py-1 rounded-md bg-destructive-foreground/20 hover:bg-destructive-foreground/30 transition-colors text-xs font-medium"
+        >
+          <RefreshCw size={12} />
+          重试
+        </button>
+        <button
+          onClick={onDismiss}
+          className="p-1 rounded-md hover:bg-destructive-foreground/20 transition-colors"
+          aria-label="关闭"
+        >
+          <X size={14} />
+        </button>
+      </div>
     </div>
   )
 }
