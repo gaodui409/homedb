@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import {
   Sun, BookOpen, Moon, Settings, Download, Upload,
-  Plus, Check, X, Pencil, MoreVertical, LogOut, Cloud, CloudOff,
+  Plus, Check, X, Pencil, MoreVertical, LogOut, Cloud,
 } from 'lucide-react'
 import type { Theme, NavData } from '@/lib/types'
 
@@ -234,11 +234,7 @@ export function NavHeader({
                 className="h-8 w-8 flex items-center justify-center"
                 title={syncing ? '正在同步...' : '已同步'}
               >
-                {syncing ? (
-                  <Cloud size={15} className="text-primary animate-pulse" />
-                ) : (
-                  <CloudOff size={15} className="text-muted-foreground/50" />
-                )}
+                <Cloud size={15} className={syncing ? 'text-primary animate-pulse' : 'text-green-500'} />
               </div>
             )}
 
