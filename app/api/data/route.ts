@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     const result = await put(BLOB_KEY, JSON.stringify(data), {
       access: 'private',
       addRandomSuffix: false,
+      allowOverwrite: true,
     })
 
     console.log('[v0] Blob put successful, URL:', result.url)

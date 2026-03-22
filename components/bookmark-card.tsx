@@ -84,24 +84,19 @@ export function BookmarkCard({
   }
 
   const handleClick = () => {
-    if (adminMode) {
-      onEdit(bookmark)
-    } else {
-      window.open(bookmark.url, '_blank', 'noopener,noreferrer')
-    }
+    // Always open link, even in admin mode (edit via pencil icon only)
+    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
   }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`nav-card group relative flex items-center gap-3 rounded-xl bg-card p-3 select-none transition-all duration-200 ${
-        adminMode ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
-      } ${isDragging ? 'ring-2 ring-primary/40' : ''}`}
+      className={`nav-card group relative flex items-center gap-3 rounded-xl bg-card p-3 select-none transition-all duration-200 cursor-pointer ${isDragging ? 'ring-2 ring-primary/40' : ''}`}
       onClick={handleClick}
-      role={adminMode ? 'button' : 'link'}
+      role="link"
       tabIndex={0}
-      aria-label={adminMode ? `编辑 ${bookmark.name}` : `打开 ${bookmark.name}`}
+      aria-label={`打开 ${bookmark.name}`}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()

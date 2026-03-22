@@ -80,7 +80,7 @@ function BookmarkGroup({
   return (
     <section
       id={`group-${group.id}`}
-      className={`rounded-2xl transition-all duration-200 scroll-mt-32 ${
+      className={`rounded-2xl transition-all duration-200 scroll-mt-28 ${
         isDragging ? 'ring-2 ring-primary/30 shadow-lg' : ''
       } ${isOver ? 'ring-2 ring-primary ring-offset-2 bg-primary/5' : ''}`}
     >
@@ -133,6 +133,9 @@ function BookmarkGroup({
       {/* Bookmark Grid */}
       <div ref={setDropRef}>
         <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>
+          {sortedBookmarks.length === 0 && !adminMode && (
+            <p className="text-sm text-muted-foreground py-4 text-center">暂无书签</p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
             {sortedBookmarks.map((bm) => (
               <BookmarkCard

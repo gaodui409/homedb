@@ -216,7 +216,7 @@ export function BookmarkModal({ state, groups, onSave, onClose }: BookmarkModalP
   )
 }
 
-// ── Group Modal ──────────────────────────────────────────────────────────
+// ── Group Modal ───────────────────────────────��──────────────────────────
 export interface GroupModalState {
   group?: Group // present when editing
 }
@@ -315,12 +315,13 @@ export function ImportModeModal({ onImport, onClose, fileName }: ImportModalProp
           已解析文件：<span className="font-medium text-foreground">{fileName}</span>
         </p>
         <p className="text-sm text-foreground">请选择导入方式：</p>
+        <p className="text-xs text-destructive">覆盖将清除所有现有数据，此操作不可撤销。建议先导出备份。</p>
         <div className="flex gap-2">
           <button
             onClick={() => { onImport('overwrite'); onClose() }}
             className="flex-1 rounded-lg border border-destructive/50 px-4 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
           >
-            覆盖现有数据
+            覆盖（不可撤销）
           </button>
           <button
             onClick={() => { onImport('merge'); onClose() }}
