@@ -73,9 +73,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ valid: false }, { status: 401 })
   }
 
-  // Check if it's the special no-auth token
+  // Check if it's the special no-auth token - only valid when no password is set
   if (token === 'no-auth-required') {
-    return NextResponse.json({ valid: true, noAuth: true })
+    // Password is set but user has old no-auth token — reject it
+    return NextResponse.json({ valid: false }, { status: 401 })
   }
 
   if (verifyToken(token)) {

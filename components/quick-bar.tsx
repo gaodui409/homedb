@@ -75,7 +75,7 @@ export function QuickBar({ groups, pinnedBookmarks, adminMode, searchQuery, onSe
   const hasPinned = pinnedBookmarks.length > 0
 
   return (
-    <div className="border-b border-border bg-background/95">
+    <div className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Group anchor nav + Search */}
         <div className="flex items-center gap-2 py-2">
